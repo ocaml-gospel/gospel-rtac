@@ -48,14 +48,15 @@ let variant_generator (constructors : Tast.constructor_decl list) =
   let variant (c : Tast.constructor_decl) =
     let name = name c in
     let gen = gen c in
-    A.pexp_variant ~loc name gen
+    let v = A.pexp_variant ~loc name gen in
+    [%expr fun () -> [%e v]]
   in
   let variants = List.map variant constructors in
   let v = A.pexp_array ~loc variants in
   [%expr
     fun () ->
       let v = [%e v] in
-      v.(Gen.int (Array.length v) ())]
+      v.(Gen.int (Array.length v) ()) ()]
 
 let record_generator (rec_decl : Tast.rec_declaration) =
   let field (ld : Tterm.lsymbol Tast.label_declaration) =
