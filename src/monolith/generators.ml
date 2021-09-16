@@ -36,6 +36,27 @@ let lsymbol2gen (ls : Tterm.lsymbol) =
   | Some ty -> ty2gen ty
   | None -> failwith "can't find type to build generator"
 
+let variant_generator (constructors : Tast.constructor_decl list) =
+  let name (c : Tast.constructor_decl) =
+    Printf.sprintf "R.%s" c.cd_cs.ls_name.id_str
+  in
+  let arg (c : Tast.constructor_decl) = c.cd_cs.ls_args in
+  let gen (c : Tast.constructor_decl) =
+    let gen = arg c |> List.map ty2gen in
+    List.map (fun e -> [%expr [%e e] ()]) gen |> A.pexp_tuple_opt ~loc
+  in
+  let variant (c : Tast.constructor_decl) =
+    let name = name c in
+    let gen = gen c in
+    A.pexp_variant ~loc name gen
+  in
+  let variants = List.map variant constructors in
+  let v = A.pexp_array ~loc variants in
+  [%expr
+    fun () ->
+      let v = [%e v] in
+      v.(Gen.int (Array.length v) ())]
+
 let record_generator (rec_decl : Tast.rec_declaration) =
   let field (ld : Tterm.lsymbol Tast.label_declaration) =
     Printf.sprintf "R.%s" ld.ld_field.ls_name.id_str
@@ -54,7 +75,7 @@ let record_generator (rec_decl : Tast.rec_declaration) =
 let generator_expr (ty_kind : Tast.type_kind) =
   match ty_kind with
   | Pty_abstract -> None
-  | Pty_variant _constructors -> None
+  | Pty_variant constructors -> Some (variant_generator constructors)
   | Pty_record rec_decl -> Some (record_generator rec_decl)
   | Pty_open -> None
 
