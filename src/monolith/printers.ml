@@ -74,12 +74,8 @@ let variant_printer (constructors : Tast.constructor_decl list) =
     let rhs = [%expr PPrintOCaml.variant "" [%e cname] 0 [%e args]] in
     A.case ~guard:None ~lhs ~rhs
   in
-  let binder = gen_symbol ~prefix:"__x" () in
-  let pbinder = B.pvar binder in
-  let ebinder = B.estring binder in
   let cases = List.map variant constructors in
-  let branches = A.pexp_match ~loc ebinder cases in
-  [%expr fun [%p pbinder] -> [%e branches]]
+  A.pexp_function ~loc cases
 
 let printer_expr (ty_kind : Tast.type_kind) =
   match ty_kind with
