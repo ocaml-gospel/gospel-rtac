@@ -123,18 +123,53 @@ module Z = struct
 
   let rec exists start stop p =
     start <= stop && (p start || exists (succ start) stop p)
+
+  let max_int = Z.of_int max_int
+
+  let min_int = Z.of_int min_int
 end
 
 module Array = struct
-  let create z =
-    if Z.(z > of_int Sys.max_array_length) then
-      raise (Invalid_argument "Array length too big")
-    else Array.make (Z.to_int z)
+  include Array
+
+  let length arr = Array.length arr |> Z.of_int
 
   let get arr z =
     if Z.(z < zero || z >= of_int (Array.length arr)) then
-      raise (Invalid_argument "Out of array bounds")
-    else Array.unsafe_get arr (Z.to_int z)
+      raise (Invalid_argument "Out of array bounds");
+    Array.unsafe_get arr (Z.to_int z)
 
-  let length arr = Array.length arr |> Z.of_int
+  let make z =
+    if Z.(z > of_int Sys.max_array_length) then
+      raise (Invalid_argument "Array length too big");
+    Array.make (Z.to_int z)
+
+  let sub arr zs zl =
+    if Z.(zs < zero || zl < zero || zs + zl > length arr) then
+      raise (Invalid_argument "Interval not in array bounds");
+    Array.sub arr (Z.to_int zs) (Z.to_int zl)
+
+  let mapi f arr = Array.mapi (fun i -> f (Z.of_int i)) arr
+end
+
+module List = struct
+  include List
+
+  let length l = List.length l |> Z.of_int
+
+  let nth l z =
+    if Z.(z < zero || z >= of_int (List.length l)) then
+      raise (Invalid_argument "Out of list bounds");
+    List.nth l (Z.to_int z)
+
+  let nth_opt l z =
+    if Z.(z < zero || z >= of_int (List.length l)) then None
+    else List.nth_opt l (Z.to_int z)
+
+  let init z f =
+    if Z.(z < zero || z >= max_int) then
+      raise (Invalid_argument "List length too big");
+    List.init (Z.to_int z) (fun i -> f (Z.of_int i))
+
+  let mapi f l = List.mapi (fun i -> f (Z.of_int i)) l
 end

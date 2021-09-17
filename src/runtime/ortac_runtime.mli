@@ -44,12 +44,36 @@ module Z : sig
   val forall : t -> t -> (t -> bool) -> bool
   (** [forall i j p] is [true] iff the predicate `p` holds forall [k] within [i]
       and [j], included. *)
+
+  val max_int : t
+
+  val min_int : t
 end
 
 module Array : sig
-  val create : Z.t -> 'a -> 'a array
+  include module type of Array
+
+  val length : 'a array -> Z.t
 
   val get : 'a array -> Z.t -> 'a
 
-  val length : 'a array -> Z.t
+  val make : Z.t -> 'a -> 'a array
+
+  val sub : 'a array -> Z.t -> Z.t -> 'a array
+
+  val mapi : (Z.t -> 'a -> 'b) -> 'a array -> 'b array
+end
+
+module List : sig
+  include module type of List
+
+  val length : 'a list -> Z.t
+
+  val nth : 'a list -> Z.t -> 'a
+
+  val nth_opt : 'a list -> Z.t -> 'a option
+
+  val init : Z.t -> (Z.t -> 'a) -> 'a list
+
+  val mapi : (Z.t -> 'a -> 'b) -> 'a list -> 'b list
 end
