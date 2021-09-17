@@ -8,7 +8,7 @@ let loc = Location.none
 let rec ty2printer (ty : Ttypes.ty) =
   match ty.ty_node with
   | Tyvar tvs -> tvs2printer tvs
-  | Tyapp (tys, _tyl) -> tys2printer tys
+  | Tyapp (tys, tyl) -> tys2printer tys tyl
 
 and tvs2printer (tvs : Ttypes.tvsymbol) =
   match tvs.tv_name.id_str with
@@ -19,14 +19,24 @@ and tvs2printer (tvs : Ttypes.tvsymbol) =
   | "string" -> [%expr PPrintOCaml.string]
   | s -> failwith (Printf.sprintf "%s printer is not yet implementer" s)
 
-and tys2printer (tys : Ttypes.tysymbol) =
+and tys2printer (tys : Ttypes.tysymbol) (tyl : Ttypes.ty list) =
+  let aux i = ty2printer (List.nth tyl i) in
   match tys.ts_ident.id_str with
   | "unit" -> [%expr PPrintOCaml.unit]
   | "bool" -> [%expr PPrintOCaml.bool]
   | "char" -> [%expr PPrintOCaml.char]
   | "int" -> [%expr PPrintOCaml.int]
   | "string" -> [%expr PPrintOCaml.string]
-  | s -> failwith (Printf.sprintf "%s printer is not yet implementer" s)
+  | "tuple2" -> [%expr M.printer.tuple2 [%e aux 0] [%e aux 1]]
+  | "tuple3" -> [%expr M.printer.tuple3 [%e aux 0] [%e aux 1] [%e aux 2]]
+  | "tuple4" ->
+      [%expr M.printer.tuple4 [%e aux 0] [%e aux 1] [%e aux 2] [%e aux 3]]
+  | "tuple5" ->
+      [%expr
+        M.printer.tuple5 [%e aux 0] [%e aux 1] [%e aux 2] [%e aux 3] [%e aux 4]]
+  | s ->
+      failwith
+        (Printf.sprintf "%s printer is not yet implemented from tys2printer" s)
 
 let lsymbol2printer (ls : Tterm.lsymbol) =
   match ls.ls_value with
