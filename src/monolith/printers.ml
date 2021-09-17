@@ -27,8 +27,8 @@ and tys2printer (tys : Ttypes.tysymbol) (tyl : Ttypes.ty list) =
   | "char" -> [%expr PPrintOCaml.char]
   | "int" -> [%expr PPrintOCaml.int]
   | "string" -> [%expr PPrintOCaml.string]
-  | "tuple2" -> [%expr M.printer.tuple2 [%e aux 0] [%e aux 1]]
-  | "tuple3" -> [%expr M.printer.tuple3 [%e aux 0] [%e aux 1] [%e aux 2]]
+  | "tuple2" -> [%expr M.Printer.tuple2 [%e aux 0] [%e aux 1]]
+  | "tuple3" -> [%expr M.Printer.tuple3 [%e aux 0] [%e aux 1] [%e aux 2]]
   | "tuple4" ->
       [%expr M.printer.tuple4 [%e aux 0] [%e aux 1] [%e aux 2] [%e aux 3]]
   | "tuple5" ->
@@ -67,7 +67,7 @@ let ty2repr x (ty : Ttypes.ty) =
 
 let variant_printer (constructors : Tast.constructor_decl list) =
   let variant (cd : Tast.constructor_decl) =
-    let x = gen_symbol ~prefix:"x" () in
+    let x = gen_symbol ~prefix:"__x" () in
     let lhs = Printf.sprintf "R.%s %s" cd.cd_cs.ls_name.id_str x |> B.pvar in
     let cname = B.estring cd.cd_cs.ls_name.id_str in
     let args = List.map (ty2repr x) cd.cd_cs.ls_args |> B.elist in
