@@ -18,7 +18,10 @@ and tvs2gen (tvs : Ttypes.tvsymbol) =
   | "char" -> [%expr Gen.char]
   | "int" -> [%expr Gen.int 1024]
   | "string" -> [%expr Gen.string (Gen.int 1024) Gen.char]
-  | s -> failwith (Printf.sprintf "%s is not yet implemented" s)
+  | s ->
+      failwith
+        (Printf.sprintf
+           "%s is not yet implemented (monolith frontend - tvs2gen)" s)
 
 and tys2gen (tys : Ttypes.tysymbol) (tyl : Ttypes.ty list) =
   match tys.ts_ident.id_str with
@@ -27,9 +30,38 @@ and tys2gen (tys : Ttypes.tysymbol) (tyl : Ttypes.ty list) =
   | "char" -> [%expr Gen.char]
   | "int" -> [%expr Gen.int 1024]
   | "string" -> [%expr Gen.string (Gen.int 1024) Gen.char]
-  | "array" -> [%expr Gen.array (Gen.int Int.max_int) [%e ty2gen (List.hd tyl)]]
+  | "array" ->
+      [%expr
+        Gen.array (Gen.int Array.max_array_length) [%e ty2gen (List.hd tyl)]]
   | "list" -> [%expr Gen.list (Gen.int Int.max_int) [%e ty2gen (List.hd tyl)]]
-  | s -> failwith (Printf.sprintf "%s is not yet implemented" s)
+  | "tuple2" ->
+      [%expr
+        M.Gen.tuple2 [%e ty2gen (List.hd tyl)] [%e ty2gen (List.nth tyl 1)]]
+  | "tuple3" ->
+      [%expr
+        M.Gen.tuple3
+          [%e ty2gen (List.hd tyl)]
+          [%e ty2gen (List.nth tyl 1)]
+          [%e ty2gen (List.nth tyl 2)]]
+  | "tuple4" ->
+      [%expr
+        M.Gen.tuple3
+          [%e ty2gen (List.hd tyl)]
+          [%e ty2gen (List.nth tyl 1)]
+          [%e ty2gen (List.nth tyl 2)]
+          [%e ty2gen (List.nth tyl 3)]]
+  | "tuple5" ->
+      [%expr
+        M.Gen.tuple3
+          [%e ty2gen (List.hd tyl)]
+          [%e ty2gen (List.nth tyl 1)]
+          [%e ty2gen (List.nth tyl 2)]
+          [%e ty2gen (List.nth tyl 3)]
+          [%e ty2gen (List.nth tyl 4)]]
+  | s ->
+      failwith
+        (Printf.sprintf
+           "%s is not yet implemented (monolith frontend - tys2gen)" s)
 
 let lsymbol2gen (ls : Tterm.lsymbol) =
   match ls.ls_value with
