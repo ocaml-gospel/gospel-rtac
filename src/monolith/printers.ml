@@ -31,7 +31,7 @@ and tys2printer (tys : Ttypes.tysymbol) =
 let lsymbol2printer (ls : Tterm.lsymbol) =
   match ls.ls_value with
   | Some ty -> ty2printer ty
-  | None -> failwith "con't find type to build printer"
+  | None -> failwith "can't find type to build printer"
 
 let mk_field (ld : Tterm.lsymbol Tast.label_declaration) =
   let field = ld.ld_field.ls_name.id_str in
@@ -51,10 +51,30 @@ let record_printer (rec_decl : Tast.rec_declaration) =
   let l = B.elist fields_printer in
   [%expr fun [%p pat] -> PPrintOCaml.record "" [%e l]]
 
+let ty2repr x (ty : Ttypes.ty) =
+  let printer = ty2printer ty in
+  [%expr [%e printer] [%e B.evar x]]
+
+let variant_printer (constructors : Tast.constructor_decl list) =
+  let variant (cd : Tast.constructor_decl) =
+    let x = gen_symbol ~prefix:"x" () in
+    let lhs = Printf.sprintf "R.%s %s" cd.cd_cs.ls_name.id_str x |> B.pvar in
+    let cname = B.estring cd.cd_cs.ls_name.id_str in
+    let args = List.map (ty2repr x) cd.cd_cs.ls_args |> B.elist in
+    let rhs = [%expr PPrintOCaml.variant "" [%e cname] 0 [%e args]] in
+    A.case ~guard:None ~lhs ~rhs
+  in
+  let binder = gen_symbol ~prefix:"__x" () in
+  let pbinder = B.pvar binder in
+  let ebinder = B.estring binder in
+  let cases = List.map variant constructors in
+  let branches = A.pexp_match ~loc ebinder cases in
+  [%expr fun [%p pbinder] -> [%e branches]]
+
 let printer_expr (ty_kind : Tast.type_kind) =
   match ty_kind with
   | Pty_abstract -> None
-  | Pty_variant _construtors -> None
+  | Pty_variant constructors -> Some (variant_printer constructors)
   | Pty_record rec_decl -> Some (record_printer rec_decl)
   | Pty_open -> None
 
