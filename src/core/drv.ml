@@ -26,7 +26,6 @@ let v env =
       ([ "Some" ], "Some");
       ([ "[]" ], "[]");
       ([ "infix ::" ], "(::)");
-      ([ "infix =" ], "(=)");
       (* Arithmetic *)
       ([ "Gospelstdlib"; "succ" ], "Z.succ");
       ([ "Gospelstdlib"; "pred" ], "Z.pred");
@@ -116,3 +115,10 @@ let v env =
 let translate t ls = Hashtbl.find_opt t.translations ls
 
 let get_ls t = get_ls_env t.env
+
+let get_ts t path =
+  List.find_map
+    (fun ns ->
+      try Some (Gospel.Tmodule.ns_find_ts ns path) with Not_found -> None)
+    t.env
+  |> Option.get

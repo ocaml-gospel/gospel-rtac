@@ -62,12 +62,16 @@ let rec bounds ~driver (var : Tterm.vsymbol) (t : Tterm.term) :
 and term ~driver (t : Tterm.term) : expression =
   let term = term ~driver in
   let unsupported m = raise (Unsupported (t.t_loc, m)) in
+  let equality = Drv.get_ls driver [ "infix =" ] in
   match t.t_node with
   | Tvar { vs_name; _ } -> evar (str "%a" Identifier.Ident.pp vs_name)
   | Tconst c -> econst c
   | Tfield (t, f) -> pexp_field (term t) (lident f.ls_name.id_str)
   | Tapp (fs, []) when Tterm.(ls_equal fs fs_bool_true) -> [%expr true]
   | Tapp (fs, []) when Tterm.(ls_equal fs fs_bool_false) -> [%expr false]
+  | Tapp (fs, [ x1; x2 ]) when Tterm.(ls_equal fs equality) ->
+      Option.get x1.t_ty |> Equality.from_gospel ~driver |> fun eq ->
+      eapply eq [ term x1; term x2 ]
   | Tapp (fs, tlist) when Tterm.is_fs_tuple fs ->
       List.map term tlist |> pexp_tuple
   | Tapp (ls, tlist) -> (
