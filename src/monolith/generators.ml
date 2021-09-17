@@ -70,7 +70,7 @@ let lsymbol2gen (ls : Tterm.lsymbol) =
 
 let variant_generator (constructors : Tast.constructor_decl list) =
   let name (c : Tast.constructor_decl) =
-    Printf.sprintf "R.%s" c.cd_cs.ls_name.id_str
+    Printf.sprintf "R.%s" c.cd_cs.ls_name.id_str |> B.evar
   in
   let arg (c : Tast.constructor_decl) = c.cd_cs.ls_args in
   let gen (c : Tast.constructor_decl) =
@@ -80,14 +80,14 @@ let variant_generator (constructors : Tast.constructor_decl list) =
   let variant (c : Tast.constructor_decl) =
     let name = name c in
     let gen = gen c in
-    let v = A.pexp_variant ~loc name gen in
-    [%expr fun () -> [%e v]]
+    match gen with
+    | None -> [%expr fun () -> [%e name]]
+    | Some gen -> [%expr fun () -> [%e name] [%e gen]]
   in
-  let variants = List.map variant constructors in
-  let v = A.pexp_array ~loc variants in
+  let variants = List.map variant constructors |> A.pexp_array ~loc in
   [%expr
     fun () ->
-      let v = [%e v] in
+      let v = [%e variants] in
       v.(Gen.int (Array.length v) ()) ()]
 
 let record_generator (rec_decl : Tast.rec_declaration) =
