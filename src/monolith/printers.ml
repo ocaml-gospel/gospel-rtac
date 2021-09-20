@@ -7,26 +7,18 @@ let loc = Location.none
 
 let rec ty2printer (ty : Ttypes.ty) =
   match ty.ty_node with
-  | Tyvar tvs -> tvs2printer tvs
-  | Tyapp (tys, tyl) -> tys2printer tys tyl
+  (* 'a is generated as int but the type checker does'nt know it *)
+  | Tyvar _tvs -> [%expr fun _ -> Print.int 42]
+  | Tyapp (tys, tyl) -> tyapp2printer tys tyl
 
-and tvs2printer (tvs : Ttypes.tvsymbol) =
-  match tvs.tv_name.id_str with
-  | "unit" -> [%expr PPrintOCaml.unit]
-  | "bool" -> [%expr PPrintOCaml.bool]
-  | "char" -> [%expr PPrintOCaml.char]
-  | "int" -> [%expr PPrintOCaml.int]
-  | "string" -> [%expr PPrintOCaml.string]
-  | s -> failwith (Printf.sprintf "%s printer is not yet implementer" s)
-
-and tys2printer (tys : Ttypes.tysymbol) (tyl : Ttypes.ty list) =
+and tyapp2printer (tys : Ttypes.tysymbol) (tyl : Ttypes.ty list) =
   let aux i = ty2printer (List.nth tyl i) in
   match tys.ts_ident.id_str with
-  | "unit" -> [%expr PPrintOCaml.unit]
-  | "bool" -> [%expr PPrintOCaml.bool]
-  | "char" -> [%expr PPrintOCaml.char]
-  | "int" -> [%expr PPrintOCaml.int]
-  | "string" -> [%expr PPrintOCaml.string]
+  | "unit" -> [%expr Print.unit]
+  | "bool" -> [%expr Print.bool]
+  | "char" -> [%expr Print.char]
+  | "int" -> [%expr Print.int]
+  | "string" -> [%expr Print.string]
   | "tuple2" -> [%expr M.Printer.tuple2 [%e aux 0] [%e aux 1]]
   | "tuple3" -> [%expr M.Printer.tuple3 [%e aux 0] [%e aux 1] [%e aux 2]]
   | "tuple4" ->

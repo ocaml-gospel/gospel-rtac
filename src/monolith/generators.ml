@@ -8,22 +8,10 @@ module B = Ortac_core.Builder
 
 let rec ty2gen (ty : Ttypes.ty) =
   match ty.ty_node with
-  | Tyvar tvs -> tvs2gen tvs
-  | Tyapp (tys, tyl) -> tys2gen tys tyl
+  | Tyvar _tvs -> [%expr Gen.sequential]
+  | Tyapp (tys, tyl) -> tyapp2gen tys tyl
 
-and tvs2gen (tvs : Ttypes.tvsymbol) =
-  match tvs.tv_name.id_str with
-  | "unit" -> [%expr Gen.unit]
-  | "bool" -> [%expr Gen.bool]
-  | "char" -> [%expr Gen.char]
-  | "int" -> [%expr Gen.int 1024]
-  | "string" -> [%expr Gen.string (Gen.int 1024) Gen.char]
-  | s ->
-      failwith
-        (Printf.sprintf
-           "%s is not yet implemented (monolith frontend - tvs2gen)" s)
-
-and tys2gen (tys : Ttypes.tysymbol) (tyl : Ttypes.ty list) =
+and tyapp2gen (tys : Ttypes.tysymbol) (tyl : Ttypes.ty list) =
   match tys.ts_ident.id_str with
   | "unit" -> [%expr Gen.unit]
   | "bool" -> [%expr Gen.bool]
