@@ -61,11 +61,15 @@ let ty2repr x (ty : Ttypes.ty) =
 
 let variant_printer (constructors : Tast.constructor_decl list) =
   let variant (cd : Tast.constructor_decl) =
-    let x = gen_symbol ~prefix:"__x" () in
-    let lhs = Printf.sprintf "R.%s %s" cd.cd_cs.ls_name.id_str x |> B.pvar in
-    let cname = B.estring cd.cd_cs.ls_name.id_str in
-    let args = List.map (ty2repr x) cd.cd_cs.ls_args |> B.elist in
-    let rhs = [%expr PPrintOCaml.variant "" [%e cname] 0 [%e args]] in
+    let cname = cd.cd_cs.ls_name.id_str in
+    let cargs = cd.cd_cs.ls_args in
+    let xs =
+      List.init (List.length cargs) (fun _ -> gen_symbol ~prefix:"__x" ())
+    in
+    let xs_str = String.concat ", " xs in
+    let lhs = Printf.sprintf "R.%s (%s)" cname xs_str |> B.pvar in
+    let args = List.map2 ty2repr xs cd.cd_cs.ls_args |> B.elist in
+    let rhs = [%expr PPrintOCaml.variant "" [%e B.estring cname] 0 [%e args]] in
     A.case ~guard:None ~lhs ~rhs
   in
   let cases = List.map variant constructors in
