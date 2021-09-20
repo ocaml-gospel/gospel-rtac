@@ -22,34 +22,22 @@ and tyapp2gen (tys : Ttypes.tysymbol) (tyl : Ttypes.ty list) =
       [%expr
         Gen.array (Gen.int Array.max_array_length) [%e ty2gen (List.hd tyl)]]
   | "list" -> [%expr Gen.list (Gen.int Int.max_int) [%e ty2gen (List.hd tyl)]]
-  | "tuple2" ->
-      [%expr
-        M.Gen.tuple2 [%e ty2gen (List.hd tyl)] [%e ty2gen (List.nth tyl 1)]]
-  | "tuple3" ->
-      [%expr
-        M.Gen.tuple3
-          [%e ty2gen (List.hd tyl)]
-          [%e ty2gen (List.nth tyl 1)]
-          [%e ty2gen (List.nth tyl 2)]]
-  | "tuple4" ->
-      [%expr
-        M.Gen.tuple3
-          [%e ty2gen (List.hd tyl)]
-          [%e ty2gen (List.nth tyl 1)]
-          [%e ty2gen (List.nth tyl 2)]
-          [%e ty2gen (List.nth tyl 3)]]
-  | "tuple5" ->
-      [%expr
-        M.Gen.tuple3
-          [%e ty2gen (List.hd tyl)]
-          [%e ty2gen (List.nth tyl 1)]
-          [%e ty2gen (List.nth tyl 2)]
-          [%e ty2gen (List.nth tyl 3)]
-          [%e ty2gen (List.nth tyl 4)]]
+  | s when String.sub s 0 5 = "tuple" -> tuple tyl
   | s ->
       failwith
         (Printf.sprintf
            "%s is not yet implemented (monolith frontend - tys2gen)" s)
+
+and tuple tyl =
+  let rec tuple_helper acc = function
+    | [] -> [%expr [%e acc]]
+    | e :: es -> tuple_helper [%expr [%e acc], [%e ty2gen e] ()] es
+  in
+  let start = function
+    | [] -> [%expr ()]
+    | ty :: tys -> tuple_helper [%expr [%e ty2gen ty] ()] tys
+  in
+  [%expr fun () -> [%e start tyl]]
 
 let lsymbol2gen (ls : Tterm.lsymbol) =
   match ls.ls_value with
