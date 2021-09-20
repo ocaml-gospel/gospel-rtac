@@ -19,6 +19,8 @@ and tyapp2printer (tys : Ttypes.tysymbol) (tyl : Ttypes.ty list) =
   | "char" -> [%expr Print.char]
   | "int" -> [%expr Print.int]
   | "string" -> [%expr Print.string]
+  | "list" -> [%expr Print.list [%e aux 0]]
+  | "array" -> [%expr Print.array [%e aux 0]]
   | "tuple2" -> [%expr M.Printer.tuple2 [%e aux 0] [%e aux 1]]
   | "tuple3" -> [%expr M.Printer.tuple3 [%e aux 0] [%e aux 1] [%e aux 2]]
   | "tuple4" ->
