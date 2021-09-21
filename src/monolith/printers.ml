@@ -7,7 +7,7 @@ let loc = Location.none
 
 let rec ty2printer (ty : Ttypes.ty) =
   match ty.ty_node with
-  (* 'a is generated as int but the type checker does'nt know it *)
+  (* 'a is generated as int but the type checker doesn't know it *)
   | Tyvar _tvs -> [%expr fun _ -> Print.int 42]
   | Tyapp (tys, tyl) -> tyapp2printer tys tyl
 
@@ -21,16 +21,38 @@ and tyapp2printer (tys : Ttypes.tysymbol) (tyl : Ttypes.ty list) =
   | "string" -> [%expr Print.string]
   | "list" -> [%expr Print.list [%e aux 0]]
   | "array" -> [%expr Print.array [%e aux 0]]
-  | "tuple2" -> [%expr M.Printer.tuple2 [%e aux 0] [%e aux 1]]
-  | "tuple3" -> [%expr M.Printer.tuple3 [%e aux 0] [%e aux 1] [%e aux 2]]
-  | "tuple4" ->
-      [%expr M.printer.tuple4 [%e aux 0] [%e aux 1] [%e aux 2] [%e aux 3]]
-  | "tuple5" ->
-      [%expr
-        M.printer.tuple5 [%e aux 0] [%e aux 1] [%e aux 2] [%e aux 3] [%e aux 4]]
+  | s when String.sub s 0 5 = "tuple" -> tuple tyl
   | s ->
       failwith
         (Printf.sprintf "%s printer is not yet implemented from tys2printer" s)
+
+and tuple tyl =
+  let elts = List.map (fun _ -> gen_symbol ~prefix:"__t" ()) tyl in
+  let vars = List.map B.evar elts in
+  let pat = String.concat ", " elts |> Printf.sprintf "(%s)" |> B.pvar in
+  let printers = List.map ty2printer tyl in
+  let rec tuple_helper acc vars printers =
+    match (vars, printers) with
+    | [], [] -> acc
+    | v :: vs, p :: ps ->
+        tuple_helper [%expr [%e acc] ^^ comma ^^ [%e p] [%e v]] vs ps
+    | _, _ ->
+        failwith
+          "from Printers.tuple, lists should be both empty or both not empty"
+  in
+  let start vars printers =
+    match (vars, printers) with
+    | [], [] -> [%expr ()]
+    | v :: vs, p :: ps -> tuple_helper [%expr [%e p] [%e v]] vs ps
+    | _, _ ->
+        failwith
+          "from Printers.start, lists should be both empty or both not empty"
+  in
+  let x = gen_symbol ~prefix:"__x" () in
+  [%expr
+    fun [%p B.pvar x] ->
+      let [%p pat] = [%e B.evar x] in
+      PPrint.(lparen ^^ [%e start vars printers] ^^ rparen)]
 
 let lsymbol2printer (ls : Tterm.lsymbol) =
   match ls.ls_value with
