@@ -8,28 +8,37 @@ let loc = Location.none
 let rec ty2printer (ty : Ttypes.ty) =
   match ty.ty_node with
   (* 'a is generated as int but the type checker doesn't know it *)
-  | Tyvar _tvs -> [%expr fun _ -> Print.int 42]
+  | Tyvar _tvs -> [%expr fun _ -> Print.string "alpha value"]
   | Tyapp (tys, tyl) -> tyapp2printer tys tyl
 
 and tyapp2printer (tys : Ttypes.tysymbol) (tyl : Ttypes.ty list) =
   let aux i = ty2printer (List.nth tyl i) in
-  match tys.ts_ident.id_str with
-  | "unit" -> [%expr Print.unit]
-  | "bool" -> [%expr Print.bool]
-  | "char" -> [%expr Print.char]
-  | "int" -> [%expr Print.int]
-  | "string" -> [%expr Print.string]
-  | "list" -> [%expr Print.list [%e aux 0]]
-  | "array" -> [%expr Print.array [%e aux 0]]
-  | s when String.sub s 0 5 = "tuple" -> tuple tyl
-  | s ->
-      failwith
-        (Printf.sprintf "%s printer is not yet implemented from tys2printer" s)
+  if Ttypes.ts_equal tys Ttypes.ts_unit then [%expr Print.unit]
+  else if Ttypes.ts_equal tys Ttypes.ts_bool then [%expr Print.bool]
+  else if Ttypes.ts_equal tys Ttypes.ts_char then [%expr Print.char]
+  else if Ttypes.ts_equal tys Ttypes.ts_integer then [%expr Print.int]
+  else if Ttypes.ts_equal tys Ttypes.ts_string then [%expr Print.string]
+  else if Ttypes.ts_equal tys Ttypes.ts_list && List.length tyl = 1 then
+    [%expr Print.list [%e aux 0]]
+  else if Ttypes.is_ts_tuple tys then tuple tyl
+  else
+    match tys.ts_ident.id_str with
+    (* | "unit" -> [%expr Print.unit] *)
+    (* | "bool" -> [%expr Print.bool] *)
+    (* | "char" -> [%expr Print.char] *)
+    | "int" -> [%expr Print.int]
+    (* | "string" -> [%expr Print.string] *)
+    (* | "list" when List.length tyl = 1 -> [%expr Print.list [%e aux 0]] *)
+    | "array" when List.length tyl = 1 -> [%expr Print.array [%e aux 0]]
+    (* | s when String.length s > 5 && String.sub s 0 5 = "tuple" -> tuple tyl *)
+    | s ->
+        failwith
+          (Printf.sprintf "%s printer is not yet implemented from tys2printer" s)
 
 and tuple tyl =
   let elts = List.map (fun _ -> gen_symbol ~prefix:"__t" ()) tyl in
   let vars = List.map B.evar elts in
-  let pat = String.concat ", " elts |> Printf.sprintf "(%s)" |> B.pvar in
+  let pat = A.ppat_tuple ~loc (List.map B.pvar elts) in
   let printers = List.map ty2printer tyl in
   let rec tuple_helper acc vars printers =
     match (vars, printers) with
@@ -68,18 +77,20 @@ let record_printer (rec_decl : Tast.rec_declaration) =
   let fields =
     List.map
       (fun (ld : Tterm.lsymbol Tast.label_declaration) ->
-        ld.ld_field.ls_name.id_str)
+        String.concat "." [ "R"; ld.ld_field.ls_name.id_str ])
       rec_decl.rd_ldl
   in
-  let fields_pat = String.concat ";" fields in
-  let fields_printer = List.map mk_field rec_decl.rd_ldl in
-  let pat = B.pvar (Printf.sprintf "R.{ %s }" fields_pat) in
-  let l = B.elist fields_printer in
-  [%expr fun [%p pat] -> PPrintOCaml.record "" [%e l]]
+  let prec =
+    A.ppat_record ~loc
+      (List.map (fun x -> (B.lident x, B.pvar x)) fields)
+      Ppxlib__.Import.Closed
+  in
+  let fields_printer = List.map mk_field rec_decl.rd_ldl |> B.elist in
+  [%expr fun [%p prec] -> PPrintOCaml.record "" [%e fields_printer]]
 
 let ty2repr x (ty : Ttypes.ty) =
   let printer = ty2printer ty in
-  [%expr [%e printer] [%e B.evar x]]
+  B.eapply printer [ B.evar x ]
 
 let variant_printer (constructors : Tast.constructor_decl list) =
   let variant (cd : Tast.constructor_decl) =
@@ -88,9 +99,10 @@ let variant_printer (constructors : Tast.constructor_decl list) =
     let xs =
       List.init (List.length cargs) (fun _ -> gen_symbol ~prefix:"__x" ())
     in
-    let xs_str = String.concat ", " xs in
-    let lhs = Printf.sprintf "R.%s (%s)" cname xs_str |> B.pvar in
-    let args = List.map2 ty2repr xs cd.cd_cs.ls_args |> B.elist in
+    let parg = A.ppat_tuple_opt ~loc (List.map B.pvar xs) in
+    let cident = String.concat "." [ "R"; cname ] |> B.lident in
+    let lhs = A.ppat_construct ~loc cident parg in
+    let args = List.map2 ty2repr xs cargs |> B.elist in
     let rhs = [%expr PPrintOCaml.variant "" [%e B.estring cname] 0 [%e args]] in
     A.case ~guard:None ~lhs ~rhs
   in
