@@ -6,50 +6,55 @@ let loc = Location.none
 module A = Ast_builder.Default
 module B = Ortac_core.Builder
 
-let rec ty2gen (ty : Ttypes.ty) =
+let rec ty2gen drv (ty : Ttypes.ty) =
   match ty.ty_node with
   | Tyvar _tvs -> [%expr Gen.sequential]
-  | Tyapp (tys, tyl) -> tyapp2gen tys tyl
+  | Tyapp (tys, tyl) -> tyapp2gen drv tys tyl
 
-and tyapp2gen (tys : Ttypes.tysymbol) (tyl : Ttypes.ty list) =
-  match tys.ts_ident.id_str with
-  | "unit" -> [%expr Gen.unit]
-  | "bool" -> [%expr Gen.bool]
-  | "char" -> [%expr Gen.char]
-  | "int" -> [%expr Gen.int 1024]
-  | "string" -> [%expr Gen.string (Gen.int 1024) Gen.char]
-  | "array" ->
-      [%expr
-        Gen.array (Gen.int Array.max_array_length) [%e ty2gen (List.hd tyl)]]
-  | "list" -> [%expr Gen.list (Gen.int Int.max_int) [%e ty2gen (List.hd tyl)]]
-  | s when String.sub s 0 5 = "tuple" -> tuple tyl
-  | s ->
-      failwith
-        (Printf.sprintf
-           "%s is not yet implemented (monolith frontend - tys2gen)" s)
+and tyapp2gen drv (tys : Ttypes.tysymbol) (tyl : Ttypes.ty list) =
+  let get_ts = Ortac_core.Drv.get_ts drv in
+  if Ttypes.ts_equal tys Ttypes.ts_unit then [%expr Gen.unit]
+  else if Ttypes.ts_equal tys Ttypes.ts_bool then [%expr Gen.bool]
+  else if Ttypes.ts_equal tys Ttypes.ts_char then [%expr Gen.char]
+  else if Ttypes.ts_equal tys Ttypes.ts_integer then [%expr Gen.int]
+  else if Ttypes.ts_equal tys Ttypes.ts_string then [%expr Gen.string]
+  else if Ttypes.ts_equal tys Ttypes.ts_list && List.length tyl = 1 then
+    [%expr Gen.list [%e ty2gen drv (List.hd tyl)]]
+  else if Ttypes.is_ts_tuple tys then tuple drv tyl
+  else if Ttypes.ts_equal tys (get_ts [ "Gospelstdlib"; "int" ]) then
+    [%expr Gen.int]
+  else if
+    Ttypes.ts_equal tys (get_ts [ "Gospelstdlib"; "array" ])
+    && List.length tyl = 1
+  then [%expr Gen.array [%e ty2gen drv (List.hd tyl)]]
+  else
+    failwith
+      (Printf.sprintf "%s generator is not yet implemented from tys2printer"
+         tys.ts_ident.id_str)
 
-and tuple tyl =
+and tuple drv tyl =
   let rec tuple_helper acc = function
     | [] -> [%expr [%e acc]]
-    | e :: es -> tuple_helper [%expr [%e acc], [%e ty2gen e] ()] es
+    | e :: es -> tuple_helper [%expr [%e acc], [%e ty2gen drv e] ()] es
   in
   let start = function
     | [] -> [%expr ()]
-    | ty :: tys -> tuple_helper [%expr [%e ty2gen ty] ()] tys
+    | ty :: tys -> tuple_helper [%expr [%e ty2gen drv ty] ()] tys
   in
   [%expr fun () -> [%e start tyl]]
 
-let lsymbol2gen (ls : Tterm.lsymbol) =
+let lsymbol2gen drv (ls : Tterm.lsymbol) =
   match ls.ls_value with
-  | Some ty -> ty2gen ty
+  | Some ty -> ty2gen drv ty
   | None -> failwith "can't find type to build generator"
 
-let variant_generator (constructors : Tast.constructor_decl list) =
+let variant_generator drv (constructors : Tast.constructor_decl list) =
   let name (c : Tast.constructor_decl) =
     Printf.sprintf "R.%s" c.cd_cs.ls_name.id_str |> B.evar
   in
   let arg (c : Tast.constructor_decl) = c.cd_cs.ls_args in
   let gen (c : Tast.constructor_decl) =
+    let ty2gen = ty2gen drv in
     let gen = arg c |> List.map ty2gen in
     List.map (fun e -> [%expr [%e e] ()]) gen |> A.pexp_tuple_opt ~loc
   in
@@ -66,12 +71,12 @@ let variant_generator (constructors : Tast.constructor_decl list) =
       let v = [%e variants] in
       v.(Gen.int (Array.length v) ()) ()]
 
-let record_generator (rec_decl : Tast.rec_declaration) =
+let record_generator drv (rec_decl : Tast.rec_declaration) =
   let field (ld : Tterm.lsymbol Tast.label_declaration) =
     Printf.sprintf "R.%s" ld.ld_field.ls_name.id_str
   in
   let gen (ld : Tterm.lsymbol Tast.label_declaration) =
-    let gen = lsymbol2gen ld.ld_field in
+    let gen = lsymbol2gen drv ld.ld_field in
     [%expr [%e gen] ()]
   in
   let r =
@@ -81,26 +86,26 @@ let record_generator (rec_decl : Tast.rec_declaration) =
   in
   [%expr fun () -> [%e r]]
 
-let generator_expr (ty_kind : Tast.type_kind) =
+let generator_expr drv (ty_kind : Tast.type_kind) =
   match ty_kind with
   | Pty_abstract -> None
-  | Pty_variant constructors -> Some (variant_generator constructors)
-  | Pty_record rec_decl -> Some (record_generator rec_decl)
+  | Pty_variant constructors -> Some (variant_generator drv constructors)
+  | Pty_record rec_decl -> Some (record_generator drv rec_decl)
   | Pty_open -> None
 
-let generator_definition (type_decl : Tast.type_declaration) =
+let generator_definition drv (type_decl : Tast.type_declaration) =
   let id = B.pvar type_decl.td_ts.ts_ident.id_str in
-  match generator_expr type_decl.td_kind with
+  match generator_expr drv type_decl.td_kind with
   | None -> None
   | Some generator -> Some [%stri let [%p id] = [%e generator]]
 
-let generator_option (sig_item : Tast.signature_item) =
+let generator_option drv (sig_item : Tast.signature_item) =
   match sig_item.sig_desc with
-  | Tast.Sig_type (_, [ type_decl ], _) -> generator_definition type_decl
+  | Tast.Sig_type (_, [ type_decl ], _) -> generator_definition drv type_decl
   | _ -> None
 
-let generators s =
-  let gen = List.filter_map generator_option s in
+let generators drv s =
+  let gen = List.filter_map (generator_option drv) s in
   let module_g = A.pmod_structure ~loc gen in
   let module_bind =
     A.module_binding ~loc ~name:(B.noloc (Some "G")) ~expr:module_g

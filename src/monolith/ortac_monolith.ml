@@ -116,10 +116,11 @@ let mk_specs s =
   [ mk_declarations s; main ]
 
 let standalone module_name env s =
+  let driver = Ortac_core.Drv.v env in
   let module_r = mk_reference module_name env s in
   let module_c = mk_candidate module_name in
-  let module_g = Generators.generators s in
-  let module_p = Printers.printers s in
+  let module_g = Generators.generators driver s in
+  let module_p = Printers.printers driver s in
   let module_s = Spec.specs s in
   let specs = mk_specs s in
   [%stri open Monolith]
