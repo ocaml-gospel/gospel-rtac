@@ -17,12 +17,13 @@ and tyapp2gen drv (tys : Ttypes.tysymbol) (tyl : Ttypes.ty list) =
   else if Ttypes.ts_equal tys Ttypes.ts_bool then [%expr Gen.bool]
   else if Ttypes.ts_equal tys Ttypes.ts_char then [%expr Gen.char]
   else if Ttypes.ts_equal tys Ttypes.ts_integer then [%expr Gen.int]
-  else if Ttypes.ts_equal tys Ttypes.ts_string then [%expr Gen.string]
+  else if Ttypes.ts_equal tys Ttypes.ts_string then
+    [%expr Gen.string (Gen.int 1024) Gen.char]
   else if Ttypes.ts_equal tys Ttypes.ts_list && List.length tyl = 1 then
     [%expr Gen.list [%e ty2gen drv (List.hd tyl)]]
   else if Ttypes.is_ts_tuple tys then tuple drv tyl
   else if Ttypes.ts_equal tys (get_ts [ "Gospelstdlib"; "int" ]) then
-    [%expr Gen.int]
+    [%expr Gen.int Int.max_int]
   else if
     Ttypes.ts_equal tys (get_ts [ "Gospelstdlib"; "array" ])
     && List.length tyl = 1
@@ -33,15 +34,11 @@ and tyapp2gen drv (tys : Ttypes.tysymbol) (tyl : Ttypes.ty list) =
          tys.ts_ident.id_str)
 
 and tuple drv tyl =
-  let rec tuple_helper acc = function
-    | [] -> [%expr [%e acc]]
-    | e :: es -> tuple_helper [%expr [%e acc], [%e ty2gen drv e] ()] es
+  let tuple =
+    A.pexp_tuple ~loc
+      (List.map (fun ts -> A.eapply ~loc (ty2gen drv ts) [ [%expr ()] ]) tyl)
   in
-  let start = function
-    | [] -> [%expr ()]
-    | ty :: tys -> tuple_helper [%expr [%e ty2gen drv ty] ()] tys
-  in
-  [%expr fun () -> [%e start tyl]]
+  [%expr fun () -> [%e tuple]]
 
 let lsymbol2gen drv (ls : Tterm.lsymbol) =
   match ls.ls_value with
