@@ -1,7 +1,7 @@
-type t = {
-  translations : (Gospel.Tterm.lsymbol, string) Hashtbl.t;
-  env : Gospel.Tmodule.namespace list;
-}
+open Gospel
+module H = Hashtbl.Make (Tterm.LS)
+
+type t = { translations : string H.t; env : Tmodule.namespace list }
 
 let get_env get env path =
   List.find_map (fun ns -> try Some (get ns path) with Not_found -> None) env
@@ -13,7 +13,7 @@ let get_env get env path =
           (list ~sep:(any ".") string)
           path)
 
-let get_ls_env = get_env Gospel.Tmodule.ns_find_ls
+let get_ls_env = get_env Tmodule.ns_find_ls
 
 let v env =
   let table =
@@ -29,6 +29,7 @@ let v env =
       ([ "Gospelstdlib"; "infix /" ], "Z.div");
       ([ "Gospelstdlib"; "mod" ], "Z.rem");
       ([ "Gospelstdlib"; "pow" ], "Z.pow");
+      ([ "Gospelstdlib"; "logand" ], "Z.logand");
       ([ "Gospelstdlib"; "prefix -" ], "Z.neg");
       ([ "Gospelstdlib"; "infix >" ], "Z.gt");
       ([ "Gospelstdlib"; "infix >=" ], "Z.geq");
@@ -45,16 +46,20 @@ let v env =
       ([ "Gospelstdlib"; "Array"; "for_all" ], "Array.for_all");
     ]
   in
-  let translations = Hashtbl.create 0 in
+  let translations = H.create 0 in
   List.iter
     (fun (path, ocaml) ->
       let ls = get_ls_env env path in
-      Hashtbl.add translations ls ocaml)
+      H.add translations ls ocaml)
     table;
   { translations; env }
 
-let translate t ls = Hashtbl.find_opt t.translations ls
+let translate t ls = H.find_opt t.translations ls
+
+let add_translation t ls s = H.replace t.translations ls s
+
+let remove_translation t ls = H.remove t.translations ls
 
 let get_ls t = get_ls_env t.env
 
-let get_ts t = get_env Gospel.Tmodule.ns_find_ts t.env
+let get_ts t = get_env Tmodule.ns_find_ts t.env

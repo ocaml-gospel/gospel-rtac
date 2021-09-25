@@ -1,9 +1,15 @@
+open Gospel
+
 type t
 
 val v : Gospel.Tmodule.namespace list -> t
 
-val translate : t -> Gospel.Tterm.lsymbol -> string option
+val add_translation : t -> Tterm.lsymbol -> string -> unit
 
-val get_ls : t -> string list -> Gospel.Tterm.lsymbol
+val remove_translation : t -> Tterm.lsymbol -> unit
 
-val get_ts : t -> string list -> Gospel.Ttypes.tysymbol
+val translate : t -> Tterm.lsymbol -> string option
+
+val get_ls : t -> string list -> Tterm.lsymbol
+
+val get_ts : t -> string list -> Ttypes.tysymbol

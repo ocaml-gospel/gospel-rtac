@@ -69,12 +69,17 @@ val bad_add: peano -> peano -> peano
 
 type tree = E | N of tree * int * tree
 
-(* @ function size (t: tree) : integer =
+(*@ function rec size (t: tree) : integer =
     match t with E -> 0 | N (l, _, r) -> size l + 1 + size r *)
 
 val size: tree -> int
 (*@ s = size t
-      ensures t <> E -> s > 0 *)
+      ensures t <> E -> s > 0
+      ensures s = size t *)
+
+val size_wrong_spec: tree -> int
+(*@ s = size_wrong_spec t
+    ensures s <> size t *)
 
 val test_tree: tree -> bool
 (*@ b = test_tree t

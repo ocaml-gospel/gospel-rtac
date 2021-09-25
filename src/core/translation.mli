@@ -32,3 +32,5 @@ val mk_post_checks :
   Tterm.term list ->
   expression ->
   expression
+
+val mk_function_def : driver:Drv.t -> Tterm.term -> expression option

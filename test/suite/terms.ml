@@ -28,6 +28,8 @@ let peano () =
 
 let trees () =
   let t = check_success "make_tree" (fun () -> make_tree E 42 E) in
+  check_success "size" (fun () -> size t |> ignore);
+  check_raises_ortac "size_wrong_spec" (fun () -> size_wrong_spec t |> ignore);
   check_raises_ortac "test_tree" (fun () -> test_tree t |> ignore);
   check_success "make_alt_tree" (fun () -> make_alt_tree Ealt 42 Ealt |> ignore);
   check_success "fill 1" (fun () -> fill E [||] 0 |> ignore);

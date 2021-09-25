@@ -40,18 +40,18 @@ let rec bounds ~driver ~loc (var : Tterm.vsymbol) (t1 : Tterm.term)
   let bound = function
     | Tterm.Tapp (f, [ { t_node = Tvar vs; _ }; t ])
       when vs.vs_name = var.vs_name ->
-        comb ~right:true f (term ~driver t)
+        comb ~right:true f (unsafe_term ~driver t)
     | Tterm.Tapp (f, [ t; { t_node = Tvar vs; _ } ])
       when vs.vs_name = var.vs_name ->
-        comb ~right:false f (term ~driver t)
+        comb ~right:false f (unsafe_term ~driver t)
     | _ -> unsupported ()
   in
   match (bound t1.t_node, bound t2.t_node) with
   | Inf start, Sup stop | Sup stop, Inf start -> (start, stop)
   | _ -> unsupported ()
 
-and term ~driver (t : Tterm.term) : expression =
-  let term = term ~driver in
+and unsafe_term ~driver (t : Tterm.term) : expression =
+  let term = unsafe_term ~driver in
   let loc = Option.value ~default:Location.none t.t_loc in
   let unsupported m = raise (W.Error (W.Unsupported m, loc)) in
   match t.t_node with
@@ -144,7 +144,7 @@ let term ~driver fail t =
   try
     Some
       [%expr
-        try [%e term ~driver t]
+        try [%e unsafe_term ~driver t]
         with e ->
           [%e fail (evar "e")];
           true]
@@ -314,3 +314,9 @@ let mk_post_checks ~driver ~register_name ~term_printer posts next =
     [%e post ~driver ~register_name ~term_printer posts];
     [%e F.report ~register_name];
     [%e next]]
+
+let mk_function_def ~driver t =
+  try Some (unsafe_term ~driver t)
+  with W.Error t ->
+    W.register t;
+    None

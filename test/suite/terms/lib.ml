@@ -30,6 +30,8 @@ type tree = E | N of tree * int * tree
 
 let rec size = function E -> 0 | N (l, _, r) -> size l + 1 + size r
 
+let size_wrong_spec = size
+
 let test_tree = function E -> true | N (l, _, r) -> l = r
 
 let make_tree l x r = N (l, x, r)
