@@ -770,7 +770,7 @@ let ghost_functions config =
   in
   aux config []
 
-let stm include_ config ir =
+let stm config ir =
   let open Reserr in
   let* config, ghost_functions = ghost_functions config ir.ghost_functions in
   let warn = [%stri [@@@ocaml.warning "-26-27"]] in
@@ -783,7 +783,7 @@ let stm include_ config ir =
         |> Mod.ident
         |> Incl.mk
         |> pstr_include)
-      include_
+      config.include_
     |> Option.to_list
   in
   let sut = sut_type config in
@@ -841,11 +841,20 @@ let stm include_ config ir =
   let call_tests =
     let loc = Location.none in
     let descr = estring (module_name ^ " STM tests") in
-    [%stri
-      let _ =
+    let expr =
+      [%expr
         QCheck_base_runner.run_tests_main
           (let count = 1000 in
            [ STMTests.agree_test ~count ~name:[%e descr] ])]
+    in
+    let expr =
+      match config.protect_call with
+      | None -> expr
+      | Some f ->
+          pexp_apply (qualify [ "Spec" ] f)
+            [ (Nolabel, efun [ (Nolabel, punit) ] expr) ]
+    in
+    pstr_value Nonrecursive [ value_binding ~pat:ppat_any ~expr ]
   in
   ok
     ([ open_mod module_name ]

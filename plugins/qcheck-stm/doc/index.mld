@@ -141,6 +141,8 @@ In order to generate postcondition-checking, Ortac/QCheck-STM uses the
 [ensures] clauses that were not used for the [next_state] function but it also
 uses the [checks] clauses and the [raises] ones.
 
+{1 How to generate the test file }
+
 Now you can generate the QCheck-STM file by running the following command where
 you indicate the file you want to test, the function call to build a value of
 the type indicated in the third argument. You can write the generated code into
@@ -177,6 +179,20 @@ like the following:
   (run %{test} --verbose)))
 ]}
 
+There are other optional argument that are worth detailing here.
+
+The first one is the [-i] optional argument, taking the name of the module to
+include in the generated code. This is a flexible way to provide pretty
+pinters, QCheck generators and extenstions to the [STM.ty] type.
+
+The second one is the [-p] optional argument, taking a string. The string
+should be the name of a function, and the function will be protecting the call
+to the generated tests. The function should be implemented in the included
+module (the one passed to the [-i] optional argument). The funciton is of type
+[(unit -> unit) -> unit]. That means that it takes the suspended call the the
+generated tests as argument, so don't forget to launch them when implementing
+the function. One use case of this optional argument is to set up a [Lwt]
+scheduler berfore running the tests.
 {1 Warning system}
 
 Now that you know what Gospel specifications for the [qcheck-stm] plugin should

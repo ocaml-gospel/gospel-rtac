@@ -6,6 +6,8 @@ type t = {
   context : Context.t;
   sut_core_type : Ppxlib.core_type;
   init_sut : Ppxlib.expression;
+  include_ : string option;
+  protect_call : string option;
 }
 
 let get_sut_type_name config =
@@ -97,6 +99,14 @@ let init path init_sut sut_str =
     let context = List.fold_left add context sigs in
     let* sut_core_type = sut_core_type sut_str
     and* init_sut = init_sut_from_string init_sut in
-    ok (sigs, { context; sut_core_type; init_sut })
+    ok
+      ( sigs,
+        {
+          context;
+          sut_core_type;
+          init_sut;
+          include_ = None;
+          protect_call = None;
+        } )
   with Gospel.Warnings.Error (l, k) ->
     error (Ortac_core.Warnings.GospelError k, l)

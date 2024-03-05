@@ -42,3 +42,61 @@
  (alias runtest)
  (action
   (diff dune.inc dune.inc.gen)))
+
+; include dependency is not handle by dune_gen
+
+(library
+ (name protect_with)
+ (modules protect_with))
+
+(rule
+ (target protect_with_stm_tests.ml)
+ (package ortac-qcheck-stm)
+ (deps
+  (package ortac-core)
+  (package ortac-qcheck-stm))
+ (action
+  (setenv
+   ORTAC_ONLY_PLUGIN
+   qcheck-stm
+   (with-stderr-to
+    protect_with_errors
+    (run
+     ortac
+     qcheck-stm
+     %{dep:protect_with.mli}
+     "make ()"
+     "int t"
+     --include=protect_with_include
+     --protect-call=run_tests
+     -o
+     %{target})))))
+
+(test
+ (name protect_with_stm_tests)
+ (package ortac-qcheck-stm)
+ (modules protect_with_stm_tests protect_with_include)
+ (libraries
+  qcheck-core
+  qcheck-core.runner
+  qcheck-stm.stm
+  qcheck-stm.sequential
+  qcheck-multicoretests-util
+  ortac-runtime
+  protect_with)
+ (action
+  (echo
+   "\n%{dep:protect_with_stm_tests.exe} has been generated with the ortac-qcheck-stm plugin.\n")))
+
+(rule
+ (alias runtest)
+ (package ortac-qcheck-stm)
+ (action
+  (progn
+   (diff protect_with_errors.expected protect_with_errors)
+   (diff protect_with_stm_tests.expected.ml protect_with_stm_tests.ml))))
+
+(rule
+ (alias launchtests)
+ (action
+  (run %{dep:protect_with_stm_tests.exe} -v)))

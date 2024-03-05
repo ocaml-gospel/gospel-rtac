@@ -1,5 +1,7 @@
 # Unreleased
 
+- Add the protect-call optional argument
+  [\#205](https://github.com/ocaml-gospel/ortac/pull/205)
 - Add a comment warning that the file is generated
   [\#198](https://github.com/ocaml-gospel/ortac/pull/198)
 - Add an include option to qcheck-stm cli

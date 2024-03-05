@@ -4,14 +4,15 @@ module Ir_of_gospel = Ir_of_gospel
 module Reserr = Reserr
 module Stm_of_ir = Stm_of_ir
 
-let main path init sut include_ output quiet () =
+let main path init sut include_ protect_call output quiet () =
   let open Reserr in
   let fmt = Registration.get_out_formatter output in
   let pp = pp quiet Ppxlib_ast.Pprintast.structure fmt in
   pp
     (let* sigs, config = Config.init path init sut in
      let* ir = Ir_of_gospel.run sigs config in
-     Stm_of_ir.stm include_ config ir)
+     let config = { config with include_; protect_call } in
+     Stm_of_ir.stm config ir)
 
 open Cmdliner
 
@@ -38,6 +39,15 @@ end = struct
              system under test."
           ~docv:"INIT")
 
+  let protect_call =
+    Arg.(
+      value
+      & opt (some string) None
+      & info [ "p"; "protect-call" ] ~docv:"PROTECT_CALL"
+          ~doc:
+            "Protect the call of the QCheck tests with PROTECT_CALL. \
+             PROTECT_CALL should be the name of a function.")
+
   let term =
     let open Registration in
     Term.(
@@ -46,6 +56,7 @@ end = struct
       $ init
       $ sut
       $ include_
+      $ protect_call
       $ output_file
       $ quiet
       $ setup_log)
