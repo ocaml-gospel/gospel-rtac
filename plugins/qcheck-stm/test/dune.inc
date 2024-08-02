@@ -3,6 +3,14 @@
  (modules array))
 
 (rule
+ (target array.gospel)
+ (action
+  (run
+   gospel
+   check
+   %{dep:array.mli})))
+
+(rule
  (target array_stm_tests.ml)
  (package ortac-qcheck-stm)
  (deps
@@ -17,7 +25,7 @@
     (run
      ortac
      qcheck-stm
-     %{dep:array.mli}
+     %{dep:array.gospel}
      %{dep:array_config.ml}
      -o
      %{target})))))
@@ -56,6 +64,14 @@
  (modules hashtbl))
 
 (rule
+ (target hashtbl.gospel)
+ (action
+  (run
+   gospel
+   check
+   %{dep:hashtbl.mli})))
+
+(rule
  (target hashtbl_stm_tests.ml)
  (package ortac-qcheck-stm)
  (deps
@@ -70,7 +86,7 @@
     (run
      ortac
      qcheck-stm
-     %{dep:hashtbl.mli}
+     %{dep:hashtbl.gospel}
      %{dep:hashtbl_config.ml}
      -o
      %{target})))))
@@ -109,6 +125,14 @@
  (modules record))
 
 (rule
+ (target record.gospel)
+ (action
+  (run
+   gospel
+   check
+   %{dep:record.mli})))
+
+(rule
  (target record_stm_tests.ml)
  (package ortac-qcheck-stm)
  (deps
@@ -123,7 +147,7 @@
     (run
      ortac
      qcheck-stm
-     %{dep:record.mli}
+     %{dep:record.gospel}
      %{dep:record_config.ml}
      -o
      %{target})))))
@@ -162,6 +186,14 @@
  (modules ref))
 
 (rule
+ (target ref.gospel)
+ (action
+  (run
+   gospel
+   check
+   %{dep:ref.mli})))
+
+(rule
  (target ref_stm_tests.ml)
  (package ortac-qcheck-stm)
  (deps
@@ -176,7 +208,7 @@
     (run
      ortac
      qcheck-stm
-     %{dep:ref.mli}
+     %{dep:ref.gospel}
      %{dep:ref_config.ml}
      -o
      %{target})))))
@@ -215,6 +247,14 @@
  (modules conjunctive_clauses))
 
 (rule
+ (target conjunctive_clauses.gospel)
+ (action
+  (run
+   gospel
+   check
+   %{dep:conjunctive_clauses.mli})))
+
+(rule
  (target conjunctive_clauses_stm_tests.ml)
  (package ortac-qcheck-stm)
  (deps
@@ -229,7 +269,7 @@
     (run
      ortac
      qcheck-stm
-     %{dep:conjunctive_clauses.mli}
+     %{dep:conjunctive_clauses.gospel}
      %{dep:conjunctive_clauses_config.ml}
      -o
      %{target})))))
@@ -268,6 +308,14 @@
  (modules sequence_model))
 
 (rule
+ (target sequence_model.gospel)
+ (action
+  (run
+   gospel
+   check
+   %{dep:sequence_model.mli})))
+
+(rule
  (target sequence_model_stm_tests.ml)
  (package ortac-qcheck-stm)
  (deps
@@ -282,7 +330,7 @@
     (run
      ortac
      qcheck-stm
-     %{dep:sequence_model.mli}
+     %{dep:sequence_model.gospel}
      %{dep:sequence_model_config.ml}
      -o
      %{target})))))
@@ -321,6 +369,14 @@
  (modules invariants))
 
 (rule
+ (target invariants.gospel)
+ (action
+  (run
+   gospel
+   check
+   %{dep:invariants.mli})))
+
+(rule
  (target invariants_stm_tests.ml)
  (package ortac-qcheck-stm)
  (deps
@@ -335,7 +391,7 @@
     (run
      ortac
      qcheck-stm
-     %{dep:invariants.mli}
+     %{dep:invariants.gospel}
      %{dep:invariants_config.ml}
      -o
      %{target})))))
@@ -374,6 +430,14 @@
  (modules integer_in_model))
 
 (rule
+ (target integer_in_model.gospel)
+ (action
+  (run
+   gospel
+   check
+   %{dep:integer_in_model.mli})))
+
+(rule
  (target integer_in_model_stm_tests.ml)
  (package ortac-qcheck-stm)
  (deps
@@ -388,7 +452,7 @@
     (run
      ortac
      qcheck-stm
-     %{dep:integer_in_model.mli}
+     %{dep:integer_in_model.gospel}
      %{dep:integer_in_model_config.ml}
      -o
      %{target})))))
@@ -427,6 +491,14 @@
  (modules ghost_as_model))
 
 (rule
+ (target ghost_as_model.gospel)
+ (action
+  (run
+   gospel
+   check
+   %{dep:ghost_as_model.mli})))
+
+(rule
  (target ghost_as_model_stm_tests.ml)
  (package ortac-qcheck-stm)
  (deps
@@ -441,7 +513,7 @@
     (run
      ortac
      qcheck-stm
-     %{dep:ghost_as_model.mli}
+     %{dep:ghost_as_model.gospel}
      %{dep:ghost_as_model_config.ml}
      -o
      %{target})))))
@@ -480,6 +552,14 @@
  (modules custom_config))
 
 (rule
+ (target custom_config.gospel)
+ (action
+  (run
+   gospel
+   check
+   %{dep:custom_config.mli})))
+
+(rule
  (target custom_config_stm_tests.ml)
  (package ortac-qcheck-stm)
  (deps
@@ -494,7 +574,7 @@
     (run
      ortac
      qcheck-stm
-     %{dep:custom_config.mli}
+     %{dep:custom_config.gospel}
      %{dep:custom_config_config.ml}
      -o
      %{target})))))
@@ -533,6 +613,14 @@
  (modules test_without_sut))
 
 (rule
+ (target test_without_sut.gospel)
+ (action
+  (run
+   gospel
+   check
+   %{dep:test_without_sut.mli})))
+
+(rule
  (target test_without_sut_stm_tests.ml)
  (package ortac-qcheck-stm)
  (deps
@@ -547,7 +635,7 @@
     (run
      ortac
      qcheck-stm
-     %{dep:test_without_sut.mli}
+     %{dep:test_without_sut.gospel}
      %{dep:test_without_sut_config.ml}
      -o
      %{target})))))
@@ -586,6 +674,14 @@
  (modules tuples))
 
 (rule
+ (target tuples.gospel)
+ (action
+  (run
+   gospel
+   check
+   %{dep:tuples.mli})))
+
+(rule
  (target tuples_stm_tests.ml)
  (package ortac-qcheck-stm)
  (deps
@@ -600,7 +696,7 @@
     (run
      ortac
      qcheck-stm
-     %{dep:tuples.mli}
+     %{dep:tuples.gospel}
      %{dep:tuples_config.ml}
      -o
      %{target})))))
@@ -639,6 +735,14 @@
  (modules functional_model))
 
 (rule
+ (target functional_model.gospel)
+ (action
+  (run
+   gospel
+   check
+   %{dep:functional_model.mli})))
+
+(rule
  (target functional_model_stm_tests.ml)
  (package ortac-qcheck-stm)
  (deps
@@ -653,7 +757,7 @@
     (run
      ortac
      qcheck-stm
-     %{dep:functional_model.mli}
+     %{dep:functional_model.gospel}
      %{dep:functional_model_config.ml}
      -o
      %{target})))))
@@ -692,6 +796,14 @@
  (modules test_cleanup))
 
 (rule
+ (target test_cleanup.gospel)
+ (action
+  (run
+   gospel
+   check
+   %{dep:test_cleanup.mli})))
+
+(rule
  (target test_cleanup_stm_tests.ml)
  (package ortac-qcheck-stm)
  (deps
@@ -706,7 +818,7 @@
     (run
      ortac
      qcheck-stm
-     %{dep:test_cleanup.mli}
+     %{dep:test_cleanup.gospel}
      %{dep:test_cleanup_config.ml}
      -o
      %{target})))))

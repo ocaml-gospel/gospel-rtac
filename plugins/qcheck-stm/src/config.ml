@@ -220,11 +220,8 @@ let scan_config cfg_uc config_mod =
 let init gospel config_module =
   let open Reserr in
   try
-    let module_name = Utils.module_name_of_path gospel in
-    Parser_frontend.parse_ocaml_gospel gospel |> Utils.type_check [] gospel
-    |> fun (env, sigs) ->
-    assert (List.length env = 1);
-    let namespace = List.hd env in
+    let open Utils in
+    let { module_name; namespace; ast } = Utils.check gospel in
     let context = Context.init module_name namespace in
     let add ctx s =
       (* we add to the context the pure OCaml values and the functions and
@@ -237,10 +234,10 @@ let init gospel config_module =
           Context.add_function fun_ls fun_ls.ls_name.id_str ctx
       | _ -> ctx
     in
-    let context = List.fold_left add context sigs in
+    let context = List.fold_left add context ast in
     let* config =
       scan_config config_under_construction config_module >>= mk_config context
     in
-    ok (sigs, config)
+    ok (ast, config)
   with Gospel.Warnings.Error (l, k) ->
     error (Ortac_core.Warnings.GospelError k, l)

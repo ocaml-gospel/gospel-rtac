@@ -5,7 +5,7 @@ val signature :
   Gospel.Tast.signature_item list ->
   Ppxlib.structure
 
-val generate : string -> Format.formatter -> unit
+val generate : Registration.input_file -> Format.formatter -> unit
 (** [generate path out] generate the code of the tests corresponding to the
     specifications present in [path] in the default configuration and print it
     on the [out] channel *)

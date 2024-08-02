@@ -34,7 +34,7 @@ end = struct
 
   let term =
     let open Registration in
-    Term.(const main $ ocaml_file $ config $ output_file $ quiet $ setup_log)
+    Term.(const main $ input_file $ config $ output_file $ quiet $ setup_log)
 
   let cmd = Cmd.v info term
 end

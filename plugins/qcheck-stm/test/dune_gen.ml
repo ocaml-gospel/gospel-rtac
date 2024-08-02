@@ -17,6 +17,14 @@ let rec print_rules pos =
  (modules %s))
 
 (rule
+ (target %s.gospel)
+ (action
+  (run
+   gospel
+   check
+   %%{dep:%s.mli})))
+
+(rule
  (target %s_stm_tests.ml)
  (package ortac-qcheck-stm)
  (deps
@@ -31,7 +39,7 @@ let rec print_rules pos =
     (run
      ortac
      qcheck-stm
-     %%{dep:%s.mli}
+     %%{dep:%s.gospel}
      %%{dep:%s.ml}
      -o
      %%{target})))))
@@ -66,7 +74,7 @@ let rec print_rules pos =
   (run %%{dep:%s_stm_tests.exe} -v)))
 
 |}
-      m m m m m config m m m m m m m m m;
+      m m m m m m m config m m m m m m m m m;
     print_rules (pos + 2))
 
 let () =

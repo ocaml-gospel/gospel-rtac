@@ -3,7 +3,7 @@
  (public_name ortac-core)
  (preprocess
   (pps ppxlib.metaquot))
- (libraries fmt gospel ppxlib.ast))
+ (libraries fmt registration gospel ppxlib.ast))
 
 (rule
  (enabled_if

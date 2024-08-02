@@ -2,12 +2,10 @@ module Ir = Ortac_wrapper__Ir
 module Utils = Ortac_core__Utils
 
 let translate path =
-  let module_name = Utils.module_name_of_path path in
-  Gospel.Parser_frontend.parse_ocaml_gospel path |> Utils.type_check [] path
-  |> fun (env, sigs) ->
-  assert (List.length env = 1);
-  let context = Ortac_core.Context.init module_name (List.hd env) in
-  Ortac_wrapper__Ir_of_gospel.signature ~context sigs
+  let open Utils in
+  let { module_name; namespace; ast } = check (Registration.MLI path) in
+  let context = Ortac_core.Context.init module_name namespace in
+  Ortac_wrapper__Ir_of_gospel.signature ~context ast
 
 let mutability =
   let open Ir in

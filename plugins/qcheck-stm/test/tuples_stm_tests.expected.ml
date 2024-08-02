@@ -51,7 +51,7 @@ module Spec =
       | Size_tup -> Format.asprintf "%s sut" "size_tup"
       | Size_tup' -> Format.asprintf "%s sut" "size_tup'"
     type nonrec state = {
-      contents: (char * int) list }
+      contents: (char, int) tuple2 list }
     let init_state =
       let () = () in
       {
@@ -126,7 +126,8 @@ module Spec =
             contents =
               ((try
                   match tup with
-                  | (a_1, b_1) -> (a_1, b_1) :: state__003_.contents
+                  | tuple2_1 (a_1, b_1) ->
+                      (tuple2 (a_1, b_1)) :: state__003_.contents
                 with
                 | e ->
                     raise
@@ -154,9 +155,9 @@ module Spec =
             contents =
               ((try
                   match tup_1 with
-                  | (c, a_2, b_2) ->
+                  | tuple3 (c, a_2, b_2) ->
                       if c = true
-                      then (a_2, b_2) :: state__003_.contents
+                      then (tuple2 (a_2, b_2)) :: state__003_.contents
                       else state__003_.contents
                 with
                 | e ->
@@ -185,9 +186,9 @@ module Spec =
             contents =
               ((try
                   match tup_2 with
-                  | (c_1, (a_3, b_3)) ->
+                  | tuple2_1 (c_1, tuple2_1 (a_3, b_3)) ->
                       if c_1 = true
-                      then (a_3, b_3) :: state__003_.contents
+                      then (tuple2 (a_3, b_3)) :: state__003_.contents
                       else state__003_.contents
                 with
                 | e ->

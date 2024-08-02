@@ -19,7 +19,7 @@ end = struct
       ~doc:
         "Wrap module functions with assertions to check their specifications."
 
-  let term = Term.(const main $ ocaml_file $ output_file $ setup_log)
+  let term = Term.(const main $ input_file $ output_file $ setup_log)
   let cmd = Cmd.v info term
 end
 

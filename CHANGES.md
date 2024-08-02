@@ -5,6 +5,8 @@
 
 # 0.3.0
 
+- Read also `.gospel` files
+  [\#196](https://github.com/ocaml-gospel/ortac/pull/196)
 - Read an optional `cleanup` function from configuration module
   [\#226](https://github.com/ocaml-gospel/ortac/pull/226)
 - Fix field access translation

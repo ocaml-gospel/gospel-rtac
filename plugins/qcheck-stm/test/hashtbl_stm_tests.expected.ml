@@ -6,8 +6,8 @@ module Ortac_runtime = Ortac_runtime_qcheck_stm
 let rec remove_first x xs_1 =
   try
     match xs_1 with
-    | (a_1, b_1)::xs ->
-        if a_1 = x then xs else (a_1, b_1) :: (remove_first x xs)
+    | (tuple2_1 (a_1, b_1))::xs ->
+        if a_1 = x then xs else (tuple2 (a_1, b_1)) :: (remove_first x xs)
     | [] -> []
   with
   | e ->
@@ -71,7 +71,7 @@ module Spec =
             (Util.Pp.pp_int true) b_3
       | Length -> Format.asprintf "%s sut" "length"
     type nonrec state = {
-      contents: (char * int) list }
+      contents: (char, int) tuple2 list }
     let init_state =
       let random = false
       and size = 16 in
@@ -176,7 +176,7 @@ module Spec =
       | Add (a_2, b_2) ->
           {
             contents =
-              ((try (a_2, b_2) :: state__003_.contents
+              ((try (tuple2 (a_2, b_2)) :: state__003_.contents
                 with
                 | e ->
                     raise
@@ -232,7 +232,9 @@ module Spec =
       | Replace (a_8, b_3) ->
           {
             contents =
-              ((try (a_8, b_3) :: (remove_first a_8 state__003_.contents)
+              ((try
+                  (tuple2 (a_8, b_3)) ::
+                    (remove_first a_8 state__003_.contents)
                 with
                 | e ->
                     raise
@@ -298,7 +300,7 @@ let ortac_postcond cmd__004_ state__005_ res__006_ =
            | Ok b_4 ->
                if
                  (try
-                    Ortac_runtime.Gospelstdlib.List.mem (a_3, b_4)
+                    Ortac_runtime.Gospelstdlib.List.mem (tuple2 (a_3, b_4))
                       (Lazy.force new_state__007_).contents
                   with
                   | e ->
@@ -343,7 +345,7 @@ let ortac_postcond cmd__004_ state__005_ res__006_ =
                                pos_cnum = 1398
                              }
                          })])
-           | Error (Not_found) ->
+           | Error (Not_found (tuple0)) ->
                if
                  (try
                     not
@@ -410,7 +412,7 @@ let ortac_postcond cmd__004_ state__005_ res__006_ =
                     else false
                 | Some b_5 ->
                     if
-                      Ortac_runtime.Gospelstdlib.List.mem (a_4, b_5)
+                      Ortac_runtime.Gospelstdlib.List.mem (tuple2 (a_4, b_5))
                         (Lazy.force new_state__007_).contents
                     then true
                     else false)
@@ -463,7 +465,8 @@ let ortac_postcond cmd__004_ state__005_ res__006_ =
             (try
                (Ortac_runtime.Gospelstdlib.List.to_seq bs) =
                  (Ortac_runtime.Gospelstdlib.Sequence.filter_map
-                    (fun (x_1, y) -> if x_1 = a_5 then Some y else None)
+                    (fun (tuple2_1 (x_1, y)) ->
+                       if x_1 = a_5 then Some y else None)
                     (Ortac_runtime.Gospelstdlib.List.to_seq
                        (Lazy.force new_state__007_).contents))
              with

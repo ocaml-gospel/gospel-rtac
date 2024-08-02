@@ -4,14 +4,13 @@ val term_printer : string -> Ppxlib.Location.t -> Gospel.Tterm.term -> string
     specification's location. Fall back on the Gospel term pretty printer if
     something goes wrong when extracting the substring. *)
 
-val module_name_of_path : string -> string
-(** [module_name_of_path p] turn the path to an OCaml file [p] into the
-    corresponding OCaml module identifier *)
+type checked = {
+  module_name : string;
+  namespace : Gospel.Tmodule.namespace;
+  ast : Gospel.Tast.signature;
+}
 
-val type_check :
-  string list ->
-  string ->
-  Gospel.Uast.s_signature_item list ->
-  Gospel.Tmodule.namespace list * Gospel.Tast.signature
-(** [type_check load_path name sigs] call the Gospel typechecker on the file
-    [name] *)
+val check : Registration.input_file -> checked
+(** [check filename] calls the Gospel type checker on [filename] with an empty
+    load path if it is an interface and read its content if it is a [.gospel]
+    file *)
