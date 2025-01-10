@@ -1,0 +1,70 @@
+{0 Ortac/Dune}
+
+{1 Overview}
+
+The [dune] plugin for [ortac] (hereafter called Ortac/Dune in order to avoid
+ambiguities) generates the dune rules necessary to use other plugins.
+
+On the command line side, Ortac/Dune plugin provides a [dune] sub-command for
+the [ortac] tool. In turn, the [dune] sub-command has also sub-commands related
+to the other plugins.
+
+{1 [qcheck-stm] sub-command}
+
+For now, only the Ortac/QCheck-STM plugin is supported. So the only sub-command
+available is [qcheck-stm] and the full command, without the arguments yet, is:
+
+{@shell[
+$ ortac dune qcheck-stm
+]}
+
+This will in turn takes some arguments. The first arguments it takes are the
+argument to feed the [ortac qcheck-stm] command. The only difference is that
+the output for the generated OCaml code is not optional. The [--include]
+argument is still optional though. In addition to the specific [qcheck-stm]
+arguments, there are two optional arguments specific to the [dune] sub-command.
+You have the possibility to specify a package and the name of the file to write
+the dune rules to include in your [dune] file.
+
+So, to sum up:
+
+{ol {- name of the file containing the Gospel specifications}
+    {- the INIT_SUT function}
+    {- the SUT type}
+    {- the filename for Ortac/QCheck-STM output}
+    {- [--include] optional argument for Ortac/QCheck-STM}
+    {- [--package] optional argument for Ortac/Dune}
+    {- [--with-stdout-to] optional argument for Ortac/Dune}}
+
+Note the if you want to use this plugin to generate your tests, you will need
+to give a value to the [--with-stdout-to] optional argument. This argument is
+optional only to allow experimenting with the command line and read the
+generated dune rules in the standard output rather than in a file. The usual
+name for such a file is [dune.inc]. But if you have to generate test rules for
+multiple files, you'll have to come up with other names. For example, if you
+want to generate test rules for the two files [a.mli] and [b.mli], you may want
+to use [dune.a.inc] and [dune.b.inc].
+
+So let's say you have an interface [mod.mli] containing some Gospel
+specifications, a type ['a t] and a value [create] from ['a] to ['a t]. You'll
+want to include [include.ml] in the test file and all that is in the package
+[my_package]. You'll then have to run:
+
+{@shell[
+$ ortac dune qcheck-stm mod "create 42" "int t" tests --include=include --package=my_package --with-stdout-to=dune.mod.inc
+]}
+
+Once you are happy with the generated rules and they are written in a file,
+you'll have to include this file in the [dune file] for your tests using the
+[(include <filename>)] stanza. Then [dune runtest] will generate the QCheck-STM
+files according to the Gospel specifications and run them.
+
+As a bonus, the generated dune rules also contain the rule to generate
+themselves, that is a rule for running the Ortac/Dune plugin with the provided
+arguments. So you can edit this rule to modify how Ortac/Dune is called. But
+you should edit only the rule for running Ortac/Dune. Any modifications of the
+other ones will be overwritten by the rule generation. The rule for running
+Ortac/Dune is easy to spot, it is the first one in the file. Note that the
+generated dune file should be included in the [dune] file in order for the
+generated rules to be regenerated.
+
